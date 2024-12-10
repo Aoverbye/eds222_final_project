@@ -1,0 +1,187 @@
+---
+title: "eds_222_final_project"
+author: "Amanda Overbye"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Analyzing the Relationship Between Rainfall and West Nile Virus Cases in California
+
+### Data
+
+Auto correlation? auto correlation function? The ACF? how we quantify degree of auto correlation how correlated the time series is with itself after a lag
+
+Past analysises have shown that rain tends to be correlated with an increase in west nile virus cases.
+
+The dataset about the West Nile Virus (WNV) cases comes from California Department of Public Health and includes data about the year, week, county and reported number of WNV cases. It includes cases from 2006 to 2024. I downloaded it from https://data.chhs.ca.gov/dataset/west-nile-virus-cases-2006-present
+
+## West Nile Cases In California: is recent rain or old rain a better predictor
+
+```{r}
+# Load in libraries
+library(tidyverse)
+library(here)
+library(dplyr)
+library(janitor)
+library(lubridate)
+```
+
+```{r}
+# Read in data
+wnv_cases <- read_csv(here('data', 'vendor.csv'))
+arcadia <- read_csv(here('data', '3862608.csv'))
+```
+
+Data Cleaning:
+
+## Data Cleaning and Preparation
+
+#### 1. WNV Cases Data
+
+**Renaming Columns:** Standardized column names for easier manipulation.
+
+```{r}
+wnv_cases <- wnv_cases %>% 
+  rename(
+    year = 'Year', 
+    week = 'Week', 
+    county = 'County', 
+    reported_positive_cases = 'Reported Positive Cases'
+  )
+```
+
+**Filtering Data:** Focused analysis on Los Angeles County (2013–2023).
+
+```{r}
+# Filter for years and county
+wnv_cases_la <- wnv_cases %>% 
+  filter(county == "Los Angeles", year >= 2013, year <= 2023)
+
+```
+
+#### 2. Rainfall Data
+
+**Date Processing:** Extracted year and week number from daily rainfall data.
+
+```{r}
+# Extract week number 
+arcadia <- arcadia %>%
+  mutate(week = isoweek(DATE), year = year(DATE))
+```
+
+**Weekly Averages:** Calculated average rainfall for each week.
+
+```{r}
+# Calculate average rainfall for week
+arcadia_avg <- arcadia %>% 
+  group_by(year, week) %>% 
+  summarize(avg_weekly_prcp = mean(PRCP, na.rm = TRUE))
+
+```
+
+#### 3. Joining Datasets
+
+-   Merged rainfall and WNV cases data by year and week.
+-   Missing weeks in the WNV dataset were filled with 0 cases, assuming no cases were reported in those weeks.
+
+```{r}
+# Merge rainfall and WNV cases by year and week and make missing weeks 0
+wnv_precip <- full_join(wnv_cases_la, arcadia_avg, by = c("year", "week")) %>% 
+  mutate(
+    reported_positive_cases = replace_na(reported_positive_cases, 0),
+    county = replace_na(county, "Los Angeles")
+  )
+```
+
+## Exploratory Data Analysis
+
+```{r}
+ggplot(wnv_cases_la, aes(x = week, y = reported_positive_cases)) +
+  geom_smooth(method = "lm", color = "navy", se = FALSE) + 
+  geom_point(color = "firebrick") +
+  theme_minimal() +
+  labs(
+    title = "Reported West Nile Virus Cases by Week in Los Angeles County",
+    x = "Week of the Year",
+    y = "Number of Reported Cases"
+  )
+
+```
+
+**1. Trends in Rainfall and WNV Cases**
+
+Visualized weekly rainfall and WNV cases over time, grouped by year.
+
+```{r}
+ggplot(wnv_precip, aes(x = week, group = year)) +
+  geom_line(aes(y = avg_weekly_prcp, color = "Rainfall"), size = 1) +
+  geom_line(aes(y = reported_positive_cases, color = "WNV Cases"), size = 1) +
+  facet_wrap(~ year) +
+  labs(
+    x = "Week",
+    y = "Values",
+    title = "Weekly Rainfall and West Nile Virus Cases",
+    color = "Legend"
+  ) +
+  scale_color_manual(values = c("Rainfall" = "navy", "WNV Cases" = "firebrick")) +
+  theme_minimal()
+
+
+```
+
+**2. Autocorrelation of WNV Cases**
+
+Computed the autocorrelation function (ACF) to determine if WNV cases exhibit temporal dependencies.
+
+```{r}
+acf(wnv_precip$reported_positive_cases, na.action = na.pass, main = "ACF of WNV Cases")
+```
+
+## Modeling the Relationship Between Rainfall and WNV Cases
+
+**1. Lagged Variables**
+
+Created a lagged rainfall variable to explore delayed effects of precipitation on WNV cases.
+
+```{r}
+wnv_precip <- wnv_precip %>% 
+  mutate(lag_prcp_4weeks = lag(avg_weekly_prcp, 4))
+```
+
+**2. Correlation Analysis**
+
+Examined the correlation between rainfall 4 weeks prior and WNV cases.
+
+```{r}
+correlation <- cor(wnv_precip$lag_prcp_4weeks, wnv_precip$reported_positive_cases, use = "complete.obs")
+print(paste("Correlation between rainfall 4 weeks ago and WNV cases:", correlation))
+```
+
+**3. Regression Analysis**
+
+Fitted a linear model to quantify the relationship between lagged rainfall and WNV cases.
+
+```{r}
+model <- lm(reported_positive_cases ~ lag_prcp_4weeks, data = wnv_precip)
+summary(model)
+```
+
+**4. Visualization of Regression**
+
+Visualized the relationship between lagged rainfall and WNV cases.
+
+```{r}
+ggplot(wnv_precip, aes(x = lag_prcp_4weeks, y = reported_positive_cases)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "navy", se = FALSE) +
+  labs(
+    title = "Relationship Between Rainfall (4 Weeks Ago) and WNV Cases",
+    x = "Average Weekly Rainfall (4 Weeks Ago)",
+    y = "Reported Positive WNV Cases"
+  ) +
+  theme_minimal()
+
+```
+
