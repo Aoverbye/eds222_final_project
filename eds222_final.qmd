@@ -4,18 +4,30 @@ author: "Amanda Overbye"
 format: html
 editor: visual
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
-# Analyzing the Relationship Between Rainfall and West Nile Virus Cases in California
+# Analyzing the Relationship Between Rainfall and West Nile Virus Cases in LA County
 
-### Data
+### What is West Nile Virus?
 
-Auto correlation? auto correlation function? The ACF? how we quantify degree of auto correlation how correlated the time series is with itself after a lag
+West Nile Virus (WNV) is the most common mosquito-transmitted virus in the United States. It is primarily spread through the bite of infected mosquitoes, and although most people who get infected with the virus experience mild symptoms, approximately 1 in 5 individuals will develop symptoms such as fever, headache, vomiting, or a rash. In rare cases, about 1 in 150 infected individuals will develop more serious conditions, such as encephalitis or meningitis, which can be life-threatening.
 
-Past analysises have shown that rain tends to be correlated with an increase in west nile virus cases.
+### Past Research:
 
-The dataset about the West Nile Virus (WNV) cases comes from California Department of Public Health and includes data about the year, week, county and reported number of WNV cases. It includes cases from 2006 to 2024. I downloaded it from https://data.chhs.ca.gov/dataset/west-nile-virus-cases-2006-present
+Past studies suggest that weather patterns, specifically rainfall and temperature, can influence the incidence of WNV cases. Heavy rainfall, in particular, has been linked to an increase in the number of reported cases. For example, past research (Soverow et al., 2009) has shown that rainfall within a week can be associated with a 29–66% increase in the incidence of WNV in the following weeks. However, other studies indicate that temperature may be a stronger predictor than rainfall in determining the risk of infection (Shand et al., 2016).
+
+For this analysis, I decided to focus on Los Angeles County and analyze whether recent rainfall patterns correlate with WNV cases over a 10-year period from 2013 to 2023.
+
+**Null Hypothesis (H₀)**: There is no relationship between precipitation and reported WNV cases. **Alternative Hypothesis (H₁)**: Higher levels of rainfall will be associated with more reported WNV cases.
+
+### Data Sources
+The data for this analysis comes from two sources:
+
+West Nile Virus Cases: Reported by the California Department of Public Health, covering 2006 to 2024.
+https://data.chhs.ca.gov/dataset/west-nile-virus-cases-2006-present
+
+Rainfall Data: Rainfall data for Arcadia, a city in LA County, was used to estimate average weekly precipitation.
 
 ## West Nile Cases In California: is recent rain or old rain a better predictor
 
@@ -33,8 +45,6 @@ library(lubridate)
 wnv_cases <- read_csv(here('data', 'vendor.csv'))
 arcadia <- read_csv(here('data', '3862608.csv'))
 ```
-
-Data Cleaning:
 
 ## Data Cleaning and Preparation
 
@@ -139,6 +149,34 @@ Computed the autocorrelation function (ACF) to determine if WNV cases exhibit te
 acf(wnv_precip$reported_positive_cases, na.action = na.pass, main = "ACF of WNV Cases")
 ```
 
+```{r}
+# Fit a linear model between rainfall and WNV cases
+rain_case_model <- lm(reported_positive_cases ~ avg_weekly_prcp, data = wnv_precip)
+
+# Summary of the model to check coefficients and significance
+summary(rain_case_model)
+
+```
+
+```{r}
+# Calculate the correlation between rainfall and WNV cases
+correlation <- cor(wnv_precip$avg_weekly_prcp, wnv_precip$reported_positive_cases, use = "complete.obs")
+print(paste("Correlation between rainfall and WNV cases:", correlation))
+```
+
+```{r}
+# Visualize the relationship with the regression line
+ggplot(wnv_precip, aes(x = avg_weekly_prcp, y = reported_positive_cases)) +
+  geom_point(color = "firebrick") + 
+  geom_smooth(method = "lm", color = "navy", se = FALSE) +
+  labs(
+    title = "Relationship Between Rainfall and West Nile Virus Cases",
+    x = "Average Weekly Rainfall (inches)",
+    y = "Reported Positive WNV Cases"
+  ) +
+  theme_minimal()
+```
+
 ## Modeling the Relationship Between Rainfall and WNV Cases
 
 **1. Lagged Variables**
@@ -185,3 +223,18 @@ ggplot(wnv_precip, aes(x = lag_prcp_4weeks, y = reported_positive_cases)) +
 
 ```
 
+Contrary to initial expectations, the data failed to demonstrate a statistically significant relationship between rainfall and West Nile Virus cases. The negative correlation and elevated p-values suggest that precipitation alone may not be a reliable predictor of virus transmission in Los Angeles County. In this analysis, I have failed to reject the null hypothesis.
+
+There are several reason that could account for these surprising results. 1. Small sample size I was only looking at cases in LA county, both of the studies I referenced early had much larger samples to analyze.
+
+2.  Lack of precipitation LA County is a notoriously sunny area, it tends to get very little precipitation year round.
+
+3.  A stronger correlation to temperature Again, referencing back to the studies mentioned earlier, both showed more of a relationship between temperature and the number of reported cases than precipitation.
+
+References
+
+Soverow, J. E., Wellenius, G. A., Fisman, D. N., & Mittleman, M. A. (2009). Infectious disease in a warming world: How weather influenced West Nile Virus in the United States (2001–2005). Environmental Health Perspectives, 117(7), 1049–1052. https://doi.org/10.1289/ehp.0800487
+
+Centers for Disease Control and Prevention. (2024, May 15). About West Nile virus. Centers for Disease Control and Prevention. https://www.cdc.gov/west-nile-virus/about/index.html
+
+Shand, L., Brown, W. M., Chaves, L. F., Goldberg, T. L., Hamer, G. L., Haramis, L., Kitron, U., Walker, E. D., & Ruiz, M. O. (2016). Predicting West Nile virus infection risk from the synergistic effects of rainfall and temperature. Journal of Medical Entomology, 53(4), 1–10. https://doi.org/10.1093/jme/tjw042

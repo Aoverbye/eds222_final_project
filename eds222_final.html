@@ -103,13 +103,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="analyzing-the-relationship-between-rainfall-and-west-nile-virus-cases-in-california" class="level1">
-<h1>Analyzing the Relationship Between Rainfall and West Nile Virus Cases in California</h1>
-<section id="data" class="level3">
-<h3 class="anchored" data-anchor-id="data">Data</h3>
-<p>Auto correlation? auto correlation function? The ACF? how we quantify degree of auto correlation how correlated the time series is with itself after a lag</p>
-<p>Past analysises have shown that rain tends to be correlated with an increase in west nile virus cases.</p>
-<p>The dataset about the West Nile Virus (WNV) cases comes from California Department of Public Health and includes data about the year, week, county and reported number of WNV cases. It includes cases from 2006 to 2024. I downloaded it from https://data.chhs.ca.gov/dataset/west-nile-virus-cases-2006-present</p>
+<section id="analyzing-the-relationship-between-rainfall-and-west-nile-virus-cases-in-la-county" class="level1">
+<h1>Analyzing the Relationship Between Rainfall and West Nile Virus Cases in LA County</h1>
+<section id="what-is-west-nile-virus" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-west-nile-virus">What is West Nile Virus?</h3>
+<p>West Nile Virus (WNV) is the most common mosquito-transmitted virus in the United States. It is primarily spread through the bite of infected mosquitoes, and although most people who get infected with the virus experience mild symptoms, approximately 1 in 5 individuals will develop symptoms such as fever, headache, vomiting, or a rash. In rare cases, about 1 in 150 infected individuals will develop more serious conditions, such as encephalitis or meningitis, which can be life-threatening.</p>
+</section>
+<section id="past-research" class="level3">
+<h3 class="anchored" data-anchor-id="past-research">Past Research:</h3>
+<p>Past studies suggest that weather patterns, specifically rainfall and temperature, can influence the incidence of WNV cases. Heavy rainfall, in particular, has been linked to an increase in the number of reported cases. For example, past research (Soverow et al., 2009) has shown that rainfall within a week can be associated with a 29–66% increase in the incidence of WNV in the following weeks. However, other studies indicate that temperature may be a stronger predictor than rainfall in determining the risk of infection (Shand et al., 2016).</p>
+<p>For this analysis, I decided to focus on Los Angeles County and analyze whether recent rainfall patterns correlate with WNV cases over a 10-year period from 2013 to 2023.</p>
+<p><strong>Null Hypothesis (H₀)</strong>: There is no relationship between precipitation and reported WNV cases. <strong>Alternative Hypothesis (H₁)</strong>: Higher levels of rainfall will be associated with more reported WNV cases.</p>
+</section>
+<section id="data-sources" class="level3">
+<h3 class="anchored" data-anchor-id="data-sources">Data Sources</h3>
+<p>The data for this analysis comes from two sources:</p>
+<p>West Nile Virus Cases: Reported by the California Department of Public Health, covering 2006 to 2024. https://data.chhs.ca.gov/dataset/west-nile-virus-cases-2006-present</p>
+<p>Rainfall Data: Rainfall data for Arcadia, a city in LA County, was used to estimate average weekly precipitation.</p>
 </section>
 <section id="west-nile-cases-in-california-is-recent-rain-or-old-rain-a-better-predictor" class="level2">
 <h2 class="anchored" data-anchor-id="west-nile-cases-in-california-is-recent-rain-or-old-rain-a-better-predictor">West Nile Cases In California: is recent rain or old rain a better predictor</h2>
@@ -170,7 +180,6 @@ date (1): DATE
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 </div>
 </div>
-<p>Data Cleaning:</p>
 </section>
 <section id="data-cleaning-and-preparation" class="level2">
 <h2 class="anchored" data-anchor-id="data-cleaning-and-preparation">Data Cleaning and Preparation</h2>
@@ -295,20 +304,86 @@ date (1): DATE
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit a linear model between rainfall and WNV cases</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>rain_case_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(reported_positive_cases <span class="sc">~</span> avg_weekly_prcp, <span class="at">data =</span> wnv_precip)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of the model to check coefficients and significance</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(rain_case_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = reported_positive_cases ~ avg_weekly_prcp, data = wnv_precip)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-2.411 -2.411 -2.395 -1.383 37.589 
+
+Coefficients:
+                Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)       2.4113     0.2507   9.618   &lt;2e-16 ***
+avg_weekly_prcp  -1.3915     1.2687  -1.097    0.273    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 5.633 on 547 degrees of freedom
+  (35 observations deleted due to missingness)
+Multiple R-squared:  0.002194,  Adjusted R-squared:  0.0003703 
+F-statistic: 1.203 on 1 and 547 DF,  p-value: 0.2732</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the correlation between rainfall and WNV cases</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>correlation <span class="ot">&lt;-</span> <span class="fu">cor</span>(wnv_precip<span class="sc">$</span>avg_weekly_prcp, wnv_precip<span class="sc">$</span>reported_positive_cases, <span class="at">use =</span> <span class="st">"complete.obs"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">"Correlation between rainfall and WNV cases:"</span>, correlation))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Correlation between rainfall and WNV cases: -0.0468444447379296"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the relationship with the regression line</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(wnv_precip, <span class="fu">aes</span>(<span class="at">x =</span> avg_weekly_prcp, <span class="at">y =</span> reported_positive_cases)) <span class="sc">+</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"firebrick"</span>) <span class="sc">+</span> </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"navy"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relationship Between Rainfall and West Nile Virus Cases"</span>,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Average Weekly Rainfall (inches)"</span>,</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Reported Positive WNV Cases"</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 35 rows containing non-finite outside the scale range
+(`stat_smooth()`).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 35 rows containing missing values or values outside the scale range
+(`geom_point()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="eds222_final_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
 <section id="modeling-the-relationship-between-rainfall-and-wnv-cases" class="level2">
 <h2 class="anchored" data-anchor-id="modeling-the-relationship-between-rainfall-and-wnv-cases">Modeling the Relationship Between Rainfall and WNV Cases</h2>
 <p><strong>1. Lagged Variables</strong></p>
 <p>Created a lagged rainfall variable to explore delayed effects of precipitation on WNV cases.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>wnv_precip <span class="ot">&lt;-</span> wnv_precip <span class="sc">%&gt;%</span> </span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lag_prcp_4weeks =</span> <span class="fu">lag</span>(avg_weekly_prcp, <span class="dv">4</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>wnv_precip <span class="ot">&lt;-</span> wnv_precip <span class="sc">%&gt;%</span> </span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lag_prcp_4weeks =</span> <span class="fu">lag</span>(avg_weekly_prcp, <span class="dv">4</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><strong>2. Correlation Analysis</strong></p>
 <p>Examined the correlation between rainfall 4 weeks prior and WNV cases.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>correlation <span class="ot">&lt;-</span> <span class="fu">cor</span>(wnv_precip<span class="sc">$</span>lag_prcp_4weeks, wnv_precip<span class="sc">$</span>reported_positive_cases, <span class="at">use =</span> <span class="st">"complete.obs"</span>)</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">"Correlation between rainfall 4 weeks ago and WNV cases:"</span>, correlation))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>correlation <span class="ot">&lt;-</span> <span class="fu">cor</span>(wnv_precip<span class="sc">$</span>lag_prcp_4weeks, wnv_precip<span class="sc">$</span>reported_positive_cases, <span class="at">use =</span> <span class="st">"complete.obs"</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">"Correlation between rainfall 4 weeks ago and WNV cases:"</span>, correlation))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "Correlation between rainfall 4 weeks ago and WNV cases: -0.0669666699724962"</code></pre>
 </div>
@@ -316,8 +391,8 @@ date (1): DATE
 <p><strong>3. Regression Analysis</strong></p>
 <p>Fitted a linear model to quantify the relationship between lagged rainfall and WNV cases.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(reported_positive_cases <span class="sc">~</span> lag_prcp_4weeks, <span class="at">data =</span> wnv_precip)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(reported_positive_cases <span class="sc">~</span> lag_prcp_4weeks, <span class="at">data =</span> wnv_precip)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -343,15 +418,15 @@ F-statistic: 2.446 on 1 and 543 DF,  p-value: 0.1184</code></pre>
 <p><strong>4. Visualization of Regression</strong></p>
 <p>Visualized the relationship between lagged rainfall and WNV cases.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(wnv_precip, <span class="fu">aes</span>(<span class="at">x =</span> lag_prcp_4weeks, <span class="at">y =</span> reported_positive_cases)) <span class="sc">+</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"navy"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relationship Between Rainfall (4 Weeks Ago) and WNV Cases"</span>,</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Average Weekly Rainfall (4 Weeks Ago)"</span>,</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Reported Positive WNV Cases"</span></span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(wnv_precip, <span class="fu">aes</span>(<span class="at">x =</span> lag_prcp_4weeks, <span class="at">y =</span> reported_positive_cases)) <span class="sc">+</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"navy"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relationship Between Rainfall (4 Weeks Ago) and WNV Cases"</span>,</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Average Weekly Rainfall (4 Weeks Ago)"</span>,</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Reported Positive WNV Cases"</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
@@ -366,11 +441,21 @@ F-statistic: 2.446 on 1 and 543 DF,  p-value: 0.1184</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="eds222_final_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="eds222_final_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>Contrary to initial expectations, the data failed to demonstrate a statistically significant relationship between rainfall and West Nile Virus cases. The negative correlation and elevated p-values suggest that precipitation alone may not be a reliable predictor of virus transmission in Los Angeles County. In this analysis, I have failed to reject the null hypothesis.</p>
+<p>There are several reason that could account for these surprising results. 1. Small sample size I was only looking at cases in LA county, both of the studies I referenced early had much larger samples to analyze.</p>
+<ol start="2" type="1">
+<li><p>Lack of precipitation LA County is a notoriously sunny area, it tends to get very little precipitation year round.</p></li>
+<li><p>A stronger correlation to temperature Again, referencing back to the studies mentioned earlier, both showed more of a relationship between temperature and the number of reported cases than precipitation.</p></li>
+</ol>
+<p>References</p>
+<p>Soverow, J. E., Wellenius, G. A., Fisman, D. N., &amp; Mittleman, M. A. (2009). Infectious disease in a warming world: How weather influenced West Nile Virus in the United States (2001–2005). Environmental Health Perspectives, 117(7), 1049–1052. https://doi.org/10.1289/ehp.0800487</p>
+<p>Centers for Disease Control and Prevention. (2024, May 15). About West Nile virus. Centers for Disease Control and Prevention. https://www.cdc.gov/west-nile-virus/about/index.html</p>
+<p>Shand, L., Brown, W. M., Chaves, L. F., Goldberg, T. L., Hamer, G. L., Haramis, L., Kitron, U., Walker, E. D., &amp; Ruiz, M. O. (2016). Predicting West Nile virus infection risk from the synergistic effects of rainfall and temperature. Journal of Medical Entomology, 53(4), 1–10. https://doi.org/10.1093/jme/tjw042</p>
 </section>
 </section>
 
