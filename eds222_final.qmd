@@ -1,8 +1,14 @@
 ---
-title: "eds_222_final_project"
+title: "WNV_cases_in_LA"
 author: "Amanda Overbye"
-format: html
-editor: visual
+date: last-modified
+execute: 
+  eval: true
+  warning: false
+format:
+  html:
+    code-fold: true
+    toc: true
 editor_options: 
   chunk_output_type: console
 ---
@@ -11,15 +17,20 @@ editor_options:
 
 ### What is West Nile Virus?
 
-West Nile Virus (WNV) is the most common mosquito-transmitted virus in the United States. It is primarily spread through the bite of infected mosquitoes, and although most people who get infected with the virus experience mild symptoms, approximately 1 in 5 individuals will develop symptoms such as fever, headache, vomiting, or a rash. In rare cases, about 1 in 150 infected individuals will develop more serious conditions, such as encephalitis or meningitis, which can be life-threatening.
+West Nile Virus (WNV) is the most common mosquito-transmitted virus in the United States. It is primarily spread through the bite of infected mosquitoes. Although most people who get infected with the virus experience mild symptoms, approximately 1 in 5 individuals will develop symptoms such as fever, headache, vomiting, or a rash (CDC, 2024). In rare cases, about 1 in 150 infected individuals will develop more serious conditions, such as encephalitis or meningitis, which can be life-threatening (CDC, 2024).
 
 ### Past Research:
 
-Past studies suggest that weather patterns, specifically rainfall and temperature, can influence the incidence of WNV cases. Heavy rainfall, in particular, has been linked to an increase in the number of reported cases. For example, past research (Soverow et al., 2009) has shown that rainfall within a week can be associated with a 29–66% increase in the incidence of WNV in the following weeks. However, other studies indicate that temperature may be a stronger predictor than rainfall in determining the risk of infection (Shand et al., 2016).
+Past studies suggest that weather patterns, specifically rainfall and temperature, can influence the incidence of WNV cases. Heavy rainfall, in particular, has been linked to an increase in the number of reported cases. For example, past research (Soverow et al., 2009) has shown that rainfall within a week can be associated with a 29–66% increase in the incidence of WNV in the following weeks. However, other studies indicate that temperature may be a stronger predictor than rainfall in determining the risk of infection (Shand et al., 2016). 
 
-For this analysis, I decided to focus on Los Angeles County and analyze whether recent rainfall patterns correlate with WNV cases over a 10-year period from 2013 to 2023.
+Something of note in the Shand et al. paper is that they were looking at infection rates of mosquitoes, as opposed to human infections. With this, there may be different results because WNV so often does not have noticeable symptoms in people, there probably are more people infected than can be accounted for. Shand et. al. used a statistical linear regression with information about past weather events. In some models, they also used lagged previous infection cases as an independent variable to help predict future infections. Soverow, et al. used a conditional logistic regression in their analysis and also found results that even heavy rainfall within the past week can lead to higher WNV cases.
 
-**Null Hypothesis (H₀)**: There is no relationship between precipitation and reported WNV cases. **Alternative Hypothesis (H₁)**: Higher levels of rainfall will be associated with more reported WNV cases.
+For this analysis, I decided to focus on Los Angeles County and analyze whether recent rainfall patterns correlate with WNV cases over 10 years from 2013 to 2023.
+
+**Null Hypothesis (H₀)**: There is no relationship between precipitation and reported WNV cases.
+
+
+**Alternative Hypothesis (H₁)**: Higher levels of rainfall will be associated with more reported WNV cases.
 
 ### Data Sources
 The data for this analysis comes from two sources:
@@ -27,7 +38,9 @@ The data for this analysis comes from two sources:
 West Nile Virus Cases: Reported by the California Department of Public Health, covering 2006 to 2024.
 https://data.chhs.ca.gov/dataset/west-nile-virus-cases-2006-present
 
-Rainfall Data: Rainfall data for Arcadia, a city in LA County, was used to estimate average weekly precipitation.
+Rainfall Data: Rainfall data for Arcadia, a city in LA County. This data was requested from NOAAs Climate Data Online: Dataset Discovery portal.
+https://www.ncei.noaa.gov/cdo-web/
+
 
 ## West Nile Cases In California: is recent rain or old rain a better predictor
 
@@ -120,6 +133,10 @@ ggplot(wnv_cases_la, aes(x = week, y = reported_positive_cases)) +
 
 ```
 
+**Explanation Of Graph**
+
+This graph shows the number of reported cases of WNV throughout the ten year period. There was a spike in WNV cases in 2017 in LA County with 268 infections (up from 153 in 2016) and 27 deaths (up from 6 in 2016)(LACDPH, 2018). Before 2017, 2015 had been the most fatal year for WNV with 24 deaths (). The spike in cases happened in October, 2017 and with the most cases being reported week 41 (7. Oct - 13. Oct). 
+
 **1. Trends in Rainfall and WNV Cases**
 
 Visualized weekly rainfall and WNV cases over time, grouped by year.
@@ -138,8 +155,35 @@ ggplot(wnv_precip, aes(x = week, group = year)) +
   scale_color_manual(values = c("Rainfall" = "navy", "WNV Cases" = "firebrick")) +
   theme_minimal()
 
-
 ```
+
+**Explanation Of Graph**
+
+This graph shows the amount of rainfall and the number of WNV cases per year. These graphs also show the spike in cases in 2017. Some experts attributed this spike in cases to an unusually wet winter (CDPH, 2017).
+
+
+```{r}
+# Filter the data for 2017
+wnv_precip_2017 <- wnv_precip %>% 
+  filter(year == 2017)
+```
+
+```{r}
+# Plot the graph for 2017
+ggplot(wnv_precip_2017, aes(x = week, group = year)) +
+  geom_line(aes(y = avg_weekly_prcp, color = "Rainfall"), size = 1) +
+  geom_line(aes(y = reported_positive_cases, color = "WNV Cases"), size = 1) +
+  labs(
+    x = "Week",
+    y = "Values",
+    title = "Weekly Rainfall and West Nile Virus Cases in 2017",
+    color = "Legend"
+  ) +
+  scale_color_manual(values = c("Rainfall" = "navy", "WNV Cases" = "firebrick")) +
+  theme_minimal()
+```
+
+This zoomed in graph of 2017 shows the slight spike in precipitation at the beginning of the year. 
 
 **2. Autocorrelation of WNV Cases**
 
@@ -148,6 +192,10 @@ Computed the autocorrelation function (ACF) to determine if WNV cases exhibit te
 ```{r}
 acf(wnv_precip$reported_positive_cases, na.action = na.pass, main = "ACF of WNV Cases")
 ```
+**Explanation of Graph**
+
+I wanted to include an autocorrelation graph in this analysis because WNV is spread by vectors, and because WNV cases tend to spite in the summer and fall months. The spikes on the far left of this graph are consistent with what would be expected of a virus with seasonal spikes. This graph shows that WNV cases are often reported within a few weeks of each other, particularly within 5 weeks. These results are as-expected.
+
 
 ```{r}
 # Fit a linear model between rainfall and WNV cases
@@ -157,18 +205,23 @@ rain_case_model <- lm(reported_positive_cases ~ avg_weekly_prcp, data = wnv_prec
 summary(rain_case_model)
 
 ```
+**Summary Analysis**
+
+We can see that according to our p-value (p = 0.2732), these results are not significant and that, in this case, precipitation is not a significant predictor of WNV cases. Our intercept is 2.4113 which means that when there is no rainfall, the model predicts about 2.41 reported WNV cases. Unexpectedly, with our avg_weekly_prcp coefficient being -1.3915, this model would predict that for each inch of rainfall there would be -1.3915 cases of WNV. The Multiple R-squared (0.002194) also supports these results being insignificant, as it describes only 0.22% of WNV case variation could be explained by precipitation.
+
 
 ```{r}
 # Calculate the correlation between rainfall and WNV cases
 correlation <- cor(wnv_precip$avg_weekly_prcp, wnv_precip$reported_positive_cases, use = "complete.obs")
 print(paste("Correlation between rainfall and WNV cases:", correlation))
 ```
+This correlation (-0.0468) is consistent with our previous findings that rainfall would have a negative correlation with WNV cases.
 
 ```{r}
 # Visualize the relationship with the regression line
 ggplot(wnv_precip, aes(x = avg_weekly_prcp, y = reported_positive_cases)) +
   geom_point(color = "firebrick") + 
-  geom_smooth(method = "lm", color = "navy", se = FALSE) +
+  geom_smooth(method = "glm", color = "navy", se = FALSE) +
   labs(
     title = "Relationship Between Rainfall and West Nile Virus Cases",
     x = "Average Weekly Rainfall (inches)",
@@ -178,6 +231,8 @@ ggplot(wnv_precip, aes(x = avg_weekly_prcp, y = reported_positive_cases)) +
 ```
 
 ## Modeling the Relationship Between Rainfall and WNV Cases
+
+So far, the analysis has shown unexpected results that are inconsistent with the results from prior research, except for the autocorrelation function. I thought lagging the rainfall variable may show results more consistent with the papers.
 
 **1. Lagged Variables**
 
@@ -205,6 +260,7 @@ Fitted a linear model to quantify the relationship between lagged rainfall and W
 model <- lm(reported_positive_cases ~ lag_prcp_4weeks, data = wnv_precip)
 summary(model)
 ```
+In a very generous sense, using the lagged variable did show results that were slightly more like those in the research paper. However, the results are still completely different. With the lagged variable, the p-value is still not significant (p = 0.1184). The coefficient for the intercept did go up slightly, with the difference being 0.0484. Our lag_prcp_4weeks coefficient being -2.0339 means that for every inch of rain in the past 4 weeks, there would be -2.03 WNV cases. Lastly, we can see only about 0.45% of the variability in reported WNV cases can be explained by lagged precipitation.
 
 **4. Visualization of Regression**
 
@@ -213,7 +269,7 @@ Visualized the relationship between lagged rainfall and WNV cases.
 ```{r}
 ggplot(wnv_precip, aes(x = lag_prcp_4weeks, y = reported_positive_cases)) +
   geom_point() +
-  geom_smooth(method = "lm", color = "navy", se = FALSE) +
+  geom_smooth(method = "glm", color = "navy", se = FALSE) +
   labs(
     title = "Relationship Between Rainfall (4 Weeks Ago) and WNV Cases",
     x = "Average Weekly Rainfall (4 Weeks Ago)",
@@ -225,16 +281,26 @@ ggplot(wnv_precip, aes(x = lag_prcp_4weeks, y = reported_positive_cases)) +
 
 Contrary to initial expectations, the data failed to demonstrate a statistically significant relationship between rainfall and West Nile Virus cases. The negative correlation and elevated p-values suggest that precipitation alone may not be a reliable predictor of virus transmission in Los Angeles County. In this analysis, I have failed to reject the null hypothesis.
 
-There are several reason that could account for these surprising results. 1. Small sample size I was only looking at cases in LA county, both of the studies I referenced early had much larger samples to analyze.
+There are several reasons that could account for these surprising results. 
+
+1. Small sample size I was only looking at cases in LA County, both of the studies I referenced earlier had much larger samples to analyze.
 
 2.  Lack of precipitation LA County is a notoriously sunny area, it tends to get very little precipitation year round.
 
-3.  A stronger correlation to temperature Again, referencing back to the studies mentioned earlier, both showed more of a relationship between temperature and the number of reported cases than precipitation.
+3.  There is an omitted variable bias. A stronger correlation to temperature Again, referencing back to the studies mentioned earlier, both showed more of a relationship between temperature and the number of reported cases than precipitation. My analysis omitted these variables because the Arcadia data set I used only had data about precipitation.
+
+
 
 References
 
-Soverow, J. E., Wellenius, G. A., Fisman, D. N., & Mittleman, M. A. (2009). Infectious disease in a warming world: How weather influenced West Nile Virus in the United States (2001–2005). Environmental Health Perspectives, 117(7), 1049–1052. https://doi.org/10.1289/ehp.0800487
+California Department of Public Health (CDPH). (2017, April 28). *CDPH confirms first human West Nile virus illness of 2017* (No. 17-043). California Department of Public Health. https://www.cdph.ca.gov/Programs/OPA/Pages/NR17-043.aspx
 
-Centers for Disease Control and Prevention. (2024, May 15). About West Nile virus. Centers for Disease Control and Prevention. https://www.cdc.gov/west-nile-virus/about/index.html
+Centers for Disease Control and Prevention. (2024, May 15). *About West Nile virus.* Centers for Disease Control and Prevention. https://www.cdc.gov/west-nile-virus/about/index.html
 
-Shand, L., Brown, W. M., Chaves, L. F., Goldberg, T. L., Hamer, G. L., Haramis, L., Kitron, U., Walker, E. D., & Ruiz, M. O. (2016). Predicting West Nile virus infection risk from the synergistic effects of rainfall and temperature. Journal of Medical Entomology, 53(4), 1–10. https://doi.org/10.1093/jme/tjw042
+Los Angeles County Department of Public Health (LACDPH). (2018, May 1). *West Nile virus and other arboviral diseases: 2017 Los Angeles County Epidemiology Final Report*. Los Angeles County Department of Public Health. https://publichealth.lacounty.gov/acd/docs/Arbo2017.pdf
+
+Shand, L., Brown, W. M., Chaves, L. F., Goldberg, T. L., Hamer, G. L., Haramis, L., Kitron, U., Walker, E. D., & Ruiz, M. O. (2016). *Predicting West Nile virus infection risk from the synergistic effects of rainfall and temperature*. Journal of Medical Entomology, 53(4), 1–10. https://doi.org/10.1093/jme/tjw042
+
+Soverow, J. E., Wellenius, G. A., Fisman, D. N., & Mittleman, M. A. (2009). *Infectious disease in a warming world: How weather influenced West Nile Virus in the United States (2001–2005)*. Environmental Health Perspectives, 117(7), 1049–1052. https://doi.org/10.1289/ehp.0800487
+
+
